@@ -1,0 +1,66 @@
+/* Style général */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Conteneur CV style feuille A4 */
+.cv-container {
+    max-width: 210mm; /* Largeur A4 */
+    min-height: 297mm; /* Hauteur A4 */
+    margin: auto;
+}
+
+/* --- Thèmes --- */
+
+/* Standard (Par défaut) */
+.Standard .header-section h1 {
+    color: #333;
+}
+
+/* BlueTheme */
+.BlueTheme .header-section h1 {
+    color: #0d6efd;
+}
+.BlueTheme .section-title {
+    color: #0d6efd;
+    border-color: #0d6efd !important;
+}
+
+/* DarkTheme (Attention, pour l'impression on évite souvent les fonds noirs, mais voici une version "Dark Mode" écran qui reste lisible) */
+.DarkTheme .cv-container {
+    background-color: #343a40 !important;
+    color: #f8f9fa;
+}
+.DarkTheme .header-section h1 {
+    color: #f8f9fa;
+}
+.DarkTheme .text-muted {
+    color: #adb5bd !important;
+}
+
+/* --- Impression --- */
+@media print {
+    /* Cacher les boutons */
+    .no-print {
+        display: none !important;
+    }
+
+    /* Enlever les ombres et marges inutiles */
+    body {
+        background: white;
+        margin: 0;
+    }
+    .cv-container {
+        box-shadow: none !important;
+        margin: 0;
+        width: 100%;
+        max-width: 100%;
+        padding: 0 !important;
+    }
+
+    /* Forcer les couleurs de fond pour le DarkTheme si l'utilisateur imprime */
+    .DarkTheme .cv-container {
+        background-color: #343a40 !important;
+        -webkit-print-color-adjust: exact;
+    }
+}

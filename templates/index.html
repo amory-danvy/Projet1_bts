@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3 text-center">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold">Créez votre CV professionnel</h1>
+        <p class="col-md-8 fs-4 mx-auto">Un outil simple, rapide et gratuit pour générer des CVs au format PDF.
+            Inscrivez-vous, remplissez le formulaire et téléchargez votre CV.</p>
+        {% if not current_user.is_authenticated %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('register') }}" role="button">Commencer maintenant</a>
+        <a class="btn btn-outline-secondary btn-lg" href="{{ url_for('login') }}" role="button">Se connecter</a>
+        {% else %}
+        <a class="btn btn-success btn-lg" href="{{ url_for('dashboard') }}" role="button">Aller au Tableau de bord</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

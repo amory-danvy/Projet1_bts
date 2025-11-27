@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Mes CVs</h2>
+    <a href="{{ url_for('create_cv') }}" class="btn btn-success">+ Créer un nouveau CV</a>
+</div>
+
+<div class="row">
+    {% if cvs %}
+    {% for cv in cvs %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ cv.title }}</h5>
+                <p class="card-text text-muted">Créé par {{ cv.fullname }}</p>
+                <span class="badge bg-info text-dark mb-2">{{ cv.theme }}</span>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <a href="{{ url_for('view_cv', id=cv.id) }}" class="btn btn-primary w-100">Voir / Imprimer</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted fs-5">Vous n'avez pas encore de CV.</p>
+        <a href="{{ url_for('create_cv') }}" class="btn btn-outline-primary">Commencer maintenant</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
