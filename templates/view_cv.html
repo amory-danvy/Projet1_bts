@@ -22,7 +22,7 @@
 <!-- DarkTheme -> Minimaliste -->
 
 <body
-    class="{% if cv.theme == 'Standard' %}Classique{% elif cv.theme == 'BlueTheme' %}Moderne{% elif cv.theme == 'DarkTheme' %}Minimaliste{% else %}Classique{% endif %}">
+    class="{% if cv.theme == 'Standard' %}Classique{% elif cv.theme == 'BlueTheme' %}Moderne{% elif cv.theme == 'DarkTheme' %}Minimaliste{% else %}{{ cv.theme }}{% endif %} theme-{{ cv.color_theme|lower }}">
 
     <!-- Interface (Caché à l'impression) -->
     <div class="no-print container text-center mt-4 mb-4">

@@ -106,6 +106,7 @@ def create_cv(cv_id=None):
         phone = request.form.get('phone')
         address = request.form.get('address')
         theme = request.form.get('theme')
+        color_theme = request.form.get('color_theme', 'Blue')
         
         # Récupération des listes pour Expérience
         exp_titles = request.form.getlist('experience_title[]')
@@ -158,6 +159,7 @@ def create_cv(cv_id=None):
             cv.education = json.dumps(education_list)
             cv.interests = json.dumps(interests_list)
             cv.theme = theme
+            cv.color_theme = color_theme
             cv.profile_image = image_filename
             flash('CV mis à jour avec succès !', 'success')
         else:
@@ -172,6 +174,7 @@ def create_cv(cv_id=None):
                 education=json.dumps(education_list),
                 interests=json.dumps(interests_list),
                 theme=theme,
+                color_theme=color_theme,
                 profile_image=image_filename,
                 author=current_user
             )

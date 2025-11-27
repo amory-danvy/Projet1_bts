@@ -21,7 +21,23 @@
                             </option>
                             <option value="DarkTheme" {% if cv and cv.theme=='DarkTheme' %}selected{% endif %}>
                                 Minimaliste</option>
+                            <option value="Creative" {% if cv and cv.theme=='Creative' %}selected{% endif %}>Créatif
+                            </option>
+                            <option value="Executive" {% if cv and cv.theme=='Executive' %}selected{% endif %}>Exécutif
+                            </option>
                         </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Couleur Principale</label>
+                        <div class="d-flex gap-2">
+                            {% for color in ['Blue', 'Green', 'Red', 'Gold', 'Purple'] %}
+                            <input type="radio" class="btn-check" name="color_theme" id="color-{{ color }}"
+                                value="{{ color }}" {{ 'checked' if (cv and cv.color_theme==color) or (not cv and
+                                color=='Blue' ) else '' }} onchange="updatePreview()">
+                            <label class="btn rounded-circle p-3 border-2" for="color-{{ color }}"
+                                style="background-color: var(--theme-{{ color|lower }}); border-color: white; width: 40px; height: 40px;"></label>
+                            {% endfor %}
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Photo</label>
@@ -285,10 +301,19 @@
         document.getElementById('prev-phone').textContent = document.getElementById('phone').value || '06...';
         document.getElementById('prev-address').textContent = document.getElementById('address').value || 'Ville';
 
-        // Thème
+        // Thème & Couleur
         const theme = document.getElementById('theme').value;
-        const themeMap = { 'Standard': 'Classique', 'BlueTheme': 'Moderne', 'DarkTheme': 'Minimaliste' };
-        document.getElementById('preview-container').className = `page-container ${themeMap[theme]} scale-preview`;
+        const colorTheme = document.querySelector('input[name="color_theme"]:checked').value;
+
+        const themeMap = {
+            'Standard': 'Classique',
+            'BlueTheme': 'Moderne',
+            'DarkTheme': 'Minimaliste',
+            'Creative': 'Creative',
+            'Executive': 'Executive'
+        };
+
+        document.getElementById('preview-container').className = `page-container ${themeMap[theme]} theme-${colorTheme.toLowerCase()} scale-preview`;
 
         // Expériences
         let expHtml = '';
@@ -353,6 +378,10 @@
         // Listeners sur les champs statiques
         ['fullname', 'title', 'email', 'phone', 'address', 'theme'].forEach(id => {
             document.getElementById(id).addEventListener('input', updatePreview);
+        });
+
+        document.querySelectorAll('input[name="color_theme"]').forEach(radio => {
+            radio.addEventListener('change', updatePreview);
         });
 
         // Image Preview
