@@ -1,69 +1,207 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h3 class="mb-0">Créer un nouveau CV</h3>
+<div class="row">
+    <!-- Colonne Formulaire -->
+    <div class="col-lg-5">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">⚡ Éditeur de CV</h3>
             </div>
             <div class="card-body">
-                <form method="POST">
-                    <h5 class="mb-3 text-secondary">Informations Générales</h5>
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Titre du CV (ex: Développeur Web)</label>
-                        <input type="text" class="form-control" id="title" name="title" required>
-                    </div>
+                <form method="POST" enctype="multipart/form-data" id="cvForm">
+                    <h5 class="mb-3 text-muted">Design & Photo</h5>
                     <div class="mb-3">
                         <label for="theme" class="form-label">Style du CV</label>
                         <select class="form-select" id="theme" name="theme">
-                            <option value="Standard">Standard (Blanc/Gris)</option>
-                            <option value="BlueTheme">BlueTheme (Accents Bleus)</option>
-                            <option value="DarkTheme">DarkTheme (Sombre)</option>
+                            <option value="Standard">Classique (Standard)</option>
+                            <option value="BlueTheme">Moderne (BlueTheme)</option>
+                            <option value="DarkTheme">Minimaliste (DarkTheme)</option>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label for="profile_image" class="form-label">Photo de profil</label>
+                        <input type="file" class="form-control" id="profile_image" name="profile_image"
+                            accept="image/*">
+                    </div>
 
-                    <hr>
-                    <h5 class="mb-3 text-secondary">Informations Personnelles</h5>
+                    <h5 class="mb-3 text-muted">Infos Générales</h5>
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Titre du poste</label>
+                        <input type="text" class="form-control" id="title" name="title" required
+                            placeholder="Ex: Développeur Web">
+                    </div>
                     <div class="mb-3">
                         <label for="fullname" class="form-label">Nom Complet</label>
-                        <input type="text" class="form-control" id="fullname" name="fullname" required>
+                        <input type="text" class="form-control" id="fullname" name="fullname" required
+                            placeholder="Ex: Jean Dupont">
                     </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="phone" class="form-label">Téléphone</label>
-                            <input type="text" class="form-control" id="phone" name="phone">
-                        </div>
+
+                    <h5 class="mb-3 text-muted">Contact</h5>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required
+                            placeholder="jean@exemple.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Téléphone</label>
+                        <input type="text" class="form-control" id="phone" name="phone" placeholder="06 12 34 56 78">
                     </div>
                     <div class="mb-3">
                         <label for="address" class="form-label">Adresse</label>
-                        <input type="text" class="form-control" id="address" name="address">
+                        <input type="text" class="form-control" id="address" name="address" placeholder="Paris, France">
                     </div>
 
-                    <hr>
-                    <h5 class="mb-3 text-secondary">Parcours</h5>
+                    <h5 class="mb-3 text-muted">Contenu</h5>
                     <div class="mb-3">
-                        <label for="experience" class="form-label">Expériences Professionnelles</label>
+                        <label for="experience" class="form-label">Expériences</label>
                         <textarea class="form-control" id="experience" name="experience" rows="5"
-                            placeholder="Listez vos expériences ici..."></textarea>
+                            placeholder="Vos expériences..."></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="education" class="form-label">Formation / Éducation</label>
+                        <label for="education" class="form-label">Formation</label>
                         <textarea class="form-control" id="education" name="education" rows="5"
-                            placeholder="Listez vos diplômes ici..."></textarea>
+                            placeholder="Vos diplômes..."></textarea>
                     </div>
 
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">Enregistrer le CV</button>
+                        <button type="submit" class="btn btn-success btn-lg">💾 Enregistrer le CV</button>
                         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Annuler</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Colonne Prévisualisation -->
+    <div class="col-lg-7">
+        <div class="sticky-top" style="top: 20px;">
+            <h4 class="text-center mb-3" style="font-family: 'Orbitron', sans-serif; color: var(--accent-color);">👁️
+                Aperçu Live</h4>
+
+            <!-- Alerte A4 -->
+            <div id="a4-alert" class="alert mb-3 text-center fw-bold" style="display: none;">
+                ⚠️ ATTENTION : Votre CV dépasse une page A4 !
+            </div>
+
+            <!-- Zone de preview -->
+            <div id="preview-container" class="page-container Classique scale-preview">
+                <div class="cv-grid">
+                    <header class="cv-header">
+                        <h1 class="cv-name" id="prev-fullname">Jean Dupont</h1>
+                        <h2 class="cv-title" id="prev-title">Développeur Web</h2>
+                    </header>
+
+                    <aside class="cv-sidebar">
+                        <div class="section-title-sidebar">Contact</div>
+                        <ul class="contact-list">
+                            <li><span class="icon">📧</span> <span id="prev-email">jean@exemple.com</span></li>
+                            <li><span class="icon">📱</span> <span id="prev-phone">06 12 34 56 78</span></li>
+                            <li><span class="icon">📍</span> <span id="prev-address">Paris, France</span></li>
+                        </ul>
+                    </aside>
+
+                    <main class="cv-main">
+                        <section class="cv-section">
+                            <h3 class="section-title">Expérience Professionnelle</h3>
+                            <div class="section-content" id="prev-experience">Vos expériences apparaîtront ici...</div>
+                        </section>
+
+                        <section class="cv-section">
+                            <h3 class="section-title">Formation</h3>
+                            <div class="section-content" id="prev-education">Vos diplômes apparaîtront ici...</div>
+                        </section>
+                    </main>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    /* Scale preview pour qu'elle rentre dans l'écran */
+    .scale-preview {
+        transform: scale(0.65);
+        margin-bottom: -350px;
+        border: 1px solid #333;
+    }
+</style>
+
+<!-- Script JS Réactif -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Sélection des éléments
+        const inputs = {
+            fullname: document.getElementById('fullname'),
+            title: document.getElementById('title'),
+            email: document.getElementById('email'),
+            phone: document.getElementById('phone'),
+            address: document.getElementById('address'),
+            experience: document.getElementById('experience'),
+            education: document.getElementById('education'),
+            theme: document.getElementById('theme')
+        };
+
+        const previews = {
+            fullname: document.getElementById('prev-fullname'),
+            title: document.getElementById('prev-title'),
+            email: document.getElementById('prev-email'),
+            phone: document.getElementById('prev-phone'),
+            address: document.getElementById('prev-address'),
+            experience: document.getElementById('prev-experience'),
+            education: document.getElementById('prev-education'),
+            container: document.getElementById('preview-container')
+        };
+
+        // Fonction de mise à jour
+        function updatePreview() {
+            // Textes simples
+            if (inputs.fullname.value) previews.fullname.textContent = inputs.fullname.value;
+            if (inputs.title.value) previews.title.textContent = inputs.title.value;
+            if (inputs.email.value) previews.email.textContent = inputs.email.value;
+            if (inputs.phone.value) previews.phone.textContent = inputs.phone.value;
+            if (inputs.address.value) previews.address.textContent = inputs.address.value;
+
+            // Textareas avec sauts de ligne
+            previews.experience.innerHTML = inputs.experience.value.replace(/\n/g, '<br>') || "Vos expériences...";
+            previews.education.innerHTML = inputs.education.value.replace(/\n/g, '<br>') || "Vos diplômes...";
+
+            // Thème
+            const themeMap = {
+                'Standard': 'Classique',
+                'BlueTheme': 'Moderne',
+                'DarkTheme': 'Minimaliste'
+            };
+            previews.container.className = `page-container ${themeMap[inputs.theme.value]} scale-preview`;
+
+            // Check A4
+            checkA4Size();
+        }
+
+        function checkA4Size() {
+            const preview = previews.container;
+            const alertBox = document.getElementById('a4-alert');
+
+            // Hauteur A4 en pixels (approx 1122px à 96dpi) ou comparaison relative
+            // Ici on compare scrollHeight (contenu total) vs clientHeight (hauteur fixée CSS)
+            if (preview.scrollHeight > preview.clientHeight + 5) {
+                alertBox.style.display = 'block';
+                preview.style.borderColor = 'red';
+                preview.style.boxShadow = '0 0 20px red';
+            } else {
+                alertBox.style.display = 'none';
+                preview.style.borderColor = '#333';
+                preview.style.boxShadow = 'none';
+            }
+        }
+
+        // Écouteurs d'événements sur tous les champs
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updatePreview);
+        });
+
+        // Initialisation
+        updatePreview();
+    });
+</script>
 {% endblock %}

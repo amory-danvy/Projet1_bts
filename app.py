@@ -2,24 +2,28 @@ from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from models import db, User, CV
+from werkzeug.utils import secure_filename
 import os
 
 app = Flask(__name__)
 
 # Configuration
-app.config['SECRET_KEY'] = 'une_cle_secrete_tres_difficile_a_deviner' # Nécessaire pour la sécurité des sessions
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db' # Fichier de base de données local
+app.config['SECRET_KEY'] = 'une_cle_secrete_tres_difficile_a_deviner'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'static/uploads' # Dossier pour les images
+
+# Créer le dossier d'upload s'il n'existe pas
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # Initialisation des extensions
 db.init_app(app)
 login_manager = LoginManager()
-login_manager.login_view = 'login' # Redirige vers 'login' si on essaie d'accéder à une page protégée
+login_manager.login_view = 'login'
 login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Recharge l'utilisateur depuis la BDD via son ID stocké dans la session."""
     return User.query.get(int(user_id))
 
 # --- Création de la BDD au démarrage ---
@@ -30,23 +34,19 @@ with app.app_context():
 
 @app.route('/')
 def index():
-    """Page d'accueil."""
     return render_template('index.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    """Inscription d'un nouvel utilisateur."""
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
         
-        # Vérifier si l'utilisateur existe déjà
         user = User.query.filter_by(username=username).first()
         if user:
             flash('Ce nom d\'utilisateur existe déjà.', 'danger')
             return redirect(url_for('register'))
         
-        # Créer le nouvel utilisateur avec mot de passe hashé
         new_user = User(username=username, password_hash=generate_password_hash(password, method='scrypt'))
         db.session.add(new_user)
         db.session.commit()
@@ -58,7 +58,6 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Connexion."""
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -76,21 +75,18 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
-    """Déconnexion."""
     logout_user()
     return redirect(url_for('index'))
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    """Tableau de bord : Liste des CVs de l'utilisateur."""
     user_cvs = CV.query.filter_by(user_id=current_user.id).all()
     return render_template('dashboard.html', cvs=user_cvs)
 
 @app.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_cv():
-    """Création d'un nouveau CV."""
     if request.method == 'POST':
         title = request.form.get('title')
         fullname = request.form.get('fullname')
@@ -101,6 +97,17 @@ def create_cv():
         education = request.form.get('education')
         theme = request.form.get('theme')
         
+        # Gestion de l'image
+        image_filename = 'default.jpg'
+        if 'profile_image' in request.files:
+            file = request.files['profile_image']
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                # On ajoute un préfixe unique pour éviter les doublons (optionnel mais recommandé)
+                # Ici on fait simple
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                image_filename = filename
+        
         new_cv = CV(
             title=title,
             fullname=fullname,
@@ -110,6 +117,7 @@ def create_cv():
             experience=experience,
             education=education,
             theme=theme,
+            profile_image=image_filename,
             author=current_user
         )
         

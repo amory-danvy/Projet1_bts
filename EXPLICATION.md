@@ -29,3 +29,16 @@ C'est ici que se trouvent les pages que l'utilisateur voit. Elles utilisent **Ji
 *   **Python + Flask** : Pour la logique serveur (simple et robuste).
 *   **SQLite** : Pour les données (léger, pas d'installation).
 *   **Bootstrap 5** : Pour un design propre et réactif sans effort.
+
+## Choix de Design (Mise à jour)
+
+Pour offrir des CVs visuellement impactants sans complexifier le code Python, j'ai utilisé une approche **"Pure CSS"** :
+
+1.  **CSS Grid & Flexbox** : Ces technologies modernes permettent de changer radicalement la mise en page (ex: passer d'une colonne latérale à un affichage centré) uniquement en changeant quelques lignes de CSS, sans toucher au HTML.
+2.  **Variables CSS** : J'ai structuré le code pour que les couleurs et polices soient faciles à modifier.
+3.  **Google Fonts** : L'intégration de polices comme *Roboto*, *Garamond* et *Playfair Display* donne immédiatement un aspect professionnel.
+4.  **Impression PDF** : J'ai utilisé `@media print` et `-webkit-print-color-adjust: exact` pour garantir que le PDF généré par le navigateur soit identique à l'écran, en forçant l'impression des arrière-plans colorés.
+
+## Gestion de la limite A4
+
+Pour éviter que le CV ne soit coupé à l'impression, j'ai mis en place une vérification en JavaScript côté client. Le script compare la hauteur totale du contenu (`scrollHeight`) avec la hauteur fixe de la feuille A4 (`clientHeight`). Si le contenu dépasse, une alerte visuelle prévient immédiatement l'utilisateur qu'il doit raccourcir son texte.

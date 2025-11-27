@@ -36,6 +36,7 @@ class CV(db.Model):
     
     # Style
     theme = db.Column(db.String(50), default="Standard") # Pour choisir la couleur/style
+    profile_image = db.Column(db.String(100), nullable=True, default='default.jpg') # Nom du fichier image
     
     # Clé étrangère vers l'utilisateur
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
