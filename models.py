@@ -30,9 +30,10 @@ class CV(db.Model):
     phone = db.Column(db.String(20), nullable=True)
     address = db.Column(db.String(200), nullable=True)
     
-    # Contenu
-    experience = db.Column(db.Text, nullable=True) # Texte libre pour simplifier
-    education = db.Column(db.Text, nullable=True)  # Texte libre pour simplifier
+    # Contenu (Stocké en JSON format String)
+    experience = db.Column(db.Text, nullable=True) 
+    education = db.Column(db.Text, nullable=True)
+    interests = db.Column(db.Text, nullable=True) # Nouveau champ
     
     # Style
     theme = db.Column(db.String(50), default="Standard") # Pour choisir la couleur/style

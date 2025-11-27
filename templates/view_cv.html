@@ -42,6 +42,10 @@
 
             <!-- Zone Contact / Sidebar -->
             <aside class="cv-sidebar">
+                {% if cv.profile_image and cv.profile_image != 'default.jpg' %}
+                <img src="{{ url_for('static', filename='uploads/' + cv.profile_image) }}" class="cv-profile-img"
+                    alt="Profile">
+                {% endif %}
                 <div class="section-title-sidebar">Contact</div>
                 <ul class="contact-list">
                     <li>
@@ -61,25 +65,46 @@
                     </li>
                     {% endif %}
                 </ul>
+
+                {% if cv.interests_data %}
+                <div class="section-title-sidebar mt-4">Centres d'intérêt</div>
+                <ul class="contact-list">
+                    {% for interest in cv.interests_data %}
+                    <li>{{ interest }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </aside>
 
             <!-- Zone Principale -->
             <main class="cv-main">
 
-                {% if cv.experience %}
+                {% if cv.experience_data %}
                 <section class="cv-section">
                     <h3 class="section-title">Expérience Professionnelle</h3>
                     <div class="section-content">
-                        {{ cv.experience | replace('\n', '<br>') | safe }}
+                        {% for exp in cv.experience_data %}
+                        <div class="mb-4">
+                            <h4 style="margin:0; font-size:1.1rem; font-weight:bold;">{{ exp.title }}</h4>
+                            <div style="font-style:italic; color:#666; margin-bottom:5px;">{{ exp.date }}</div>
+                            <div>{{ exp.description | replace('\n', '<br>') | safe }}</div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </section>
                 {% endif %}
 
-                {% if cv.education %}
+                {% if cv.education_data %}
                 <section class="cv-section">
                     <h3 class="section-title">Formation</h3>
                     <div class="section-content">
-                        {{ cv.education | replace('\n', '<br>') | safe }}
+                        {% for edu in cv.education_data %}
+                        <div class="mb-4">
+                            <h4 style="margin:0; font-size:1.1rem; font-weight:bold;">{{ edu.title }}</h4>
+                            <div style="font-style:italic; color:#666; margin-bottom:5px;">{{ edu.date }}</div>
+                            <div>{{ edu.description | replace('\n', '<br>') | safe }}</div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </section>
                 {% endif %}

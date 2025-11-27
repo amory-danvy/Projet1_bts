@@ -6,66 +6,132 @@
     <div class="col-lg-5">
         <div class="card mb-4">
             <div class="card-header">
-                <h3 class="mb-0">⚡ Éditeur de CV</h3>
+                <h3 class="mb-0">⚡ {{ 'Modifier le CV' if cv else 'Créer un CV' }}</h3>
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data" id="cvForm">
+                    <!-- Design & Photo -->
                     <h5 class="mb-3 text-muted">Design & Photo</h5>
                     <div class="mb-3">
-                        <label for="theme" class="form-label">Style du CV</label>
+                        <label class="form-label">Style</label>
                         <select class="form-select" id="theme" name="theme">
-                            <option value="Standard">Classique (Standard)</option>
-                            <option value="BlueTheme">Moderne (BlueTheme)</option>
-                            <option value="DarkTheme">Minimaliste (DarkTheme)</option>
+                            <option value="Standard" {% if cv and cv.theme=='Standard' %}selected{% endif %}>Classique
+                            </option>
+                            <option value="BlueTheme" {% if cv and cv.theme=='BlueTheme' %}selected{% endif %}>Moderne
+                            </option>
+                            <option value="DarkTheme" {% if cv and cv.theme=='DarkTheme' %}selected{% endif %}>
+                                Minimaliste</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="profile_image" class="form-label">Photo de profil</label>
+                        <label class="form-label">Photo</label>
+                        {% if cv and cv.profile_image != 'default.jpg' %}
+                        <div class="mb-2">
+                            <img src="{{ url_for('static', filename='uploads/' + cv.profile_image) }}" alt="Actuelle"
+                                style="height: 50px; border-radius: 5px;">
+                            <small class="text-muted ms-2">Image actuelle</small>
+                        </div>
+                        {% endif %}
                         <input type="file" class="form-control" id="profile_image" name="profile_image"
                             accept="image/*">
                     </div>
 
+                    <!-- Infos -->
                     <h5 class="mb-3 text-muted">Infos Générales</h5>
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Titre du poste</label>
-                        <input type="text" class="form-control" id="title" name="title" required
-                            placeholder="Ex: Développeur Web">
-                    </div>
-                    <div class="mb-3">
-                        <label for="fullname" class="form-label">Nom Complet</label>
-                        <input type="text" class="form-control" id="fullname" name="fullname" required
-                            placeholder="Ex: Jean Dupont">
+                    <div class="mb-3"><input type="text" class="form-control" id="title" name="title" required
+                            placeholder="Titre du poste" value="{{ cv.title if cv else '' }}"></div>
+                    <div class="mb-3"><input type="text" class="form-control" id="fullname" name="fullname" required
+                            placeholder="Nom Complet" value="{{ cv.fullname if cv else '' }}"></div>
+                    <div class="mb-3"><input type="email" class="form-control" id="email" name="email" required
+                            placeholder="Email" value="{{ cv.email if cv else '' }}"></div>
+                    <div class="mb-3"><input type="text" class="form-control" id="phone" name="phone"
+                            placeholder="Téléphone" value="{{ cv.phone if cv else '' }}"></div>
+                    <div class="mb-3"><input type="text" class="form-control" id="address" name="address"
+                            placeholder="Adresse" value="{{ cv.address if cv else '' }}"></div>
+
+                    <!-- Expériences Dynamiques -->
+                    <h5 class="mb-3 text-muted d-flex justify-content-between align-items-center">
+                        Expériences
+                        <button type="button" class="btn btn-sm btn-success" onclick="addExperience()">+
+                            Ajouter</button>
+                    </h5>
+                    <div id="experience-container">
+                        {% if cv and cv.experience_data %}
+                        {% for exp in cv.experience_data %}
+                        <div class="card p-3 mb-2 bg-dark border-secondary position-relative">
+                            <button type="button" class="btn btn-danger-neon btn-sm position-absolute top-0 end-0 m-2"
+                                onclick="removeBlock(this)">✖</button>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-1" name="experience_title[]"
+                                    placeholder="Intitulé / Poste" value="{{ exp.title }}" oninput="updatePreview()">
+                                <input type="text" class="form-control" name="experience_date[]"
+                                    placeholder="Dates (ex: 2020-2022)" value="{{ exp.date }}"
+                                    oninput="updatePreview()">
+                            </div>
+                            <div>
+                                <textarea class="form-control" name="experience_desc[]" rows="2" maxlength="200"
+                                    placeholder="Description..."
+                                    oninput="updateCharCount(this); updatePreview()">{{ exp.description }}</textarea>
+                                <div class="char-count">{{ exp.description|length }}/200</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
                     </div>
 
-                    <h5 class="mb-3 text-muted">Contact</h5>
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required
-                            placeholder="jean@exemple.com">
-                    </div>
-                    <div class="mb-3">
-                        <label for="phone" class="form-label">Téléphone</label>
-                        <input type="text" class="form-control" id="phone" name="phone" placeholder="06 12 34 56 78">
-                    </div>
-                    <div class="mb-3">
-                        <label for="address" class="form-label">Adresse</label>
-                        <input type="text" class="form-control" id="address" name="address" placeholder="Paris, France">
+                    <!-- Formations Dynamiques -->
+                    <h5 class="mb-3 text-muted d-flex justify-content-between align-items-center mt-4">
+                        Formations
+                        <button type="button" class="btn btn-sm btn-success" onclick="addEducation()">+ Ajouter</button>
+                    </h5>
+                    <div id="education-container">
+                        {% if cv and cv.education_data %}
+                        {% for edu in cv.education_data %}
+                        <div class="card p-3 mb-2 bg-dark border-secondary position-relative">
+                            <button type="button" class="btn btn-danger-neon btn-sm position-absolute top-0 end-0 m-2"
+                                onclick="removeBlock(this)">✖</button>
+                            <div class="mb-2">
+                                <input type="text" class="form-control mb-1" name="education_title[]"
+                                    placeholder="Intitulé / Poste" value="{{ edu.title }}" oninput="updatePreview()">
+                                <input type="text" class="form-control" name="education_date[]"
+                                    placeholder="Dates (ex: 2020-2022)" value="{{ edu.date }}"
+                                    oninput="updatePreview()">
+                            </div>
+                            <div>
+                                <textarea class="form-control" name="education_desc[]" rows="2" maxlength="200"
+                                    placeholder="Description..."
+                                    oninput="updateCharCount(this); updatePreview()">{{ edu.description }}</textarea>
+                                <div class="char-count">{{ edu.description|length }}/200</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
                     </div>
 
-                    <h5 class="mb-3 text-muted">Contenu</h5>
-                    <div class="mb-3">
-                        <label for="experience" class="form-label">Expériences</label>
-                        <textarea class="form-control" id="experience" name="experience" rows="5"
-                            placeholder="Vos expériences..."></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label for="education" class="form-label">Formation</label>
-                        <textarea class="form-control" id="education" name="education" rows="5"
-                            placeholder="Vos diplômes..."></textarea>
+                    <!-- Intérêts Dynamiques -->
+                    <h5 class="mb-3 text-muted d-flex justify-content-between align-items-center mt-4">
+                        Centres d'intérêt
+                        <button type="button" class="btn btn-sm btn-success" onclick="addInterest()">+ Ajouter</button>
+                    </h5>
+                    <div id="interests-container">
+                        {% if cv and cv.interests_data %}
+                        {% for interest in cv.interests_data %}
+                        <div class="card p-3 mb-2 bg-dark border-secondary position-relative">
+                            <div class="d-flex gap-2">
+                                <input type="text" class="form-control" name="interests[]"
+                                    placeholder="Ex: Football, Lecture..." value="{{ interest }}"
+                                    oninput="updatePreview()">
+                                <button type="button" class="btn btn-danger-neon btn-sm"
+                                    onclick="removeBlock(this)">✖</button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">💾 Enregistrer le CV</button>
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">💾 {{ 'Mettre à jour' if cv else
+                            'Enregistrer' }}</button>
                         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Annuler</a>
                     </div>
                 </form>
@@ -76,40 +142,46 @@
     <!-- Colonne Prévisualisation -->
     <div class="col-lg-7">
         <div class="sticky-top" style="top: 20px;">
-            <h4 class="text-center mb-3" style="font-family: 'Orbitron', sans-serif; color: var(--accent-color);">👁️
-                Aperçu Live</h4>
-
-            <!-- Alerte A4 -->
-            <div id="a4-alert" class="alert mb-3 text-center fw-bold" style="display: none;">
-                ⚠️ ATTENTION : Votre CV dépasse une page A4 !
+            <h4 class="text-center mb-3" style="font-family: 'Orbitron'; color: var(--accent-color);">👁️ Aperçu Live
+            </h4>
+            <div id="a4-alert" class="alert mb-3 text-center fw-bold"
+                style="display: none; background: rgba(255,0,0,0.2); color: red; border: 1px solid red;">
+                ⚠️ Dépassement A4 détecté !
             </div>
 
-            <!-- Zone de preview -->
             <div id="preview-container" class="page-container Classique scale-preview">
                 <div class="cv-grid">
                     <header class="cv-header">
-                        <h1 class="cv-name" id="prev-fullname">Jean Dupont</h1>
-                        <h2 class="cv-title" id="prev-title">Développeur Web</h2>
+                        <h1 class="cv-name" id="prev-fullname">Votre Nom</h1>
+                        <h2 class="cv-title" id="prev-title">Votre Titre</h2>
                     </header>
 
                     <aside class="cv-sidebar">
+                        <img id="prev-profile-img"
+                            src="{{ url_for('static', filename='uploads/' + cv.profile_image) if cv and cv.profile_image != 'default.jpg' else '' }}"
+                            class="cv-profile-img"
+                            style="{{ 'display: block;' if cv and cv.profile_image != 'default.jpg' else 'display: none;' }}"
+                            alt="Profile">
                         <div class="section-title-sidebar">Contact</div>
                         <ul class="contact-list">
-                            <li><span class="icon">📧</span> <span id="prev-email">jean@exemple.com</span></li>
-                            <li><span class="icon">📱</span> <span id="prev-phone">06 12 34 56 78</span></li>
-                            <li><span class="icon">📍</span> <span id="prev-address">Paris, France</span></li>
+                            <li><span class="icon">📧</span> <span id="prev-email">email@exemple.com</span></li>
+                            <li><span class="icon">📱</span> <span id="prev-phone">06...</span></li>
+                            <li><span class="icon">📍</span> <span id="prev-address">Ville</span></li>
                         </ul>
+
+                        <div class="section-title-sidebar mt-4">Intérêts</div>
+                        <ul class="contact-list" id="prev-interests"></ul>
                     </aside>
 
                     <main class="cv-main">
                         <section class="cv-section">
                             <h3 class="section-title">Expérience Professionnelle</h3>
-                            <div class="section-content" id="prev-experience">Vos expériences apparaîtront ici...</div>
+                            <div class="section-content" id="prev-experience"></div>
                         </section>
 
                         <section class="cv-section">
                             <h3 class="section-title">Formation</h3>
-                            <div class="section-content" id="prev-education">Vos diplômes apparaîtront ici...</div>
+                            <div class="section-content" id="prev-education"></div>
                         </section>
                     </main>
                 </div>
@@ -119,88 +191,188 @@
 </div>
 
 <style>
-    /* Scale preview pour qu'elle rentre dans l'écran */
     .scale-preview {
         transform: scale(0.65);
         margin-bottom: -350px;
         border: 1px solid #333;
+        transform-origin: top center;
+    }
+
+    .btn-danger-neon {
+        background: transparent;
+        border: 1px solid #ff0055;
+        color: #ff0055;
+        box-shadow: 0 0 5px #ff0055;
+    }
+
+    .btn-danger-neon:hover {
+        background: #ff0055;
+        color: white;
+    }
+
+    .char-count {
+        font-size: 0.8rem;
+        color: #666;
+        text-align: right;
+    }
+
+    .char-count.limit-reached {
+        color: red;
+        font-weight: bold;
     }
 </style>
 
-<!-- Script JS Réactif -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Sélection des éléments
-        const inputs = {
-            fullname: document.getElementById('fullname'),
-            title: document.getElementById('title'),
-            email: document.getElementById('email'),
-            phone: document.getElementById('phone'),
-            address: document.getElementById('address'),
-            experience: document.getElementById('experience'),
-            education: document.getElementById('education'),
-            theme: document.getElementById('theme')
-        };
+    // --- Gestion Dynamique des Champs ---
 
-        const previews = {
-            fullname: document.getElementById('prev-fullname'),
-            title: document.getElementById('prev-title'),
-            email: document.getElementById('prev-email'),
-            phone: document.getElementById('prev-phone'),
-            address: document.getElementById('prev-address'),
-            experience: document.getElementById('prev-experience'),
-            education: document.getElementById('prev-education'),
-            container: document.getElementById('preview-container')
-        };
+    function createInputBlock(type, containerId) {
+        const container = document.getElementById(containerId);
+        const div = document.createElement('div');
+        div.className = 'card p-3 mb-2 bg-dark border-secondary position-relative';
 
-        // Fonction de mise à jour
-        function updatePreview() {
-            // Textes simples
-            if (inputs.fullname.value) previews.fullname.textContent = inputs.fullname.value;
-            if (inputs.title.value) previews.title.textContent = inputs.title.value;
-            if (inputs.email.value) previews.email.textContent = inputs.email.value;
-            if (inputs.phone.value) previews.phone.textContent = inputs.phone.value;
-            if (inputs.address.value) previews.address.textContent = inputs.address.value;
-
-            // Textareas avec sauts de ligne
-            previews.experience.innerHTML = inputs.experience.value.replace(/\n/g, '<br>') || "Vos expériences...";
-            previews.education.innerHTML = inputs.education.value.replace(/\n/g, '<br>') || "Vos diplômes...";
-
-            // Thème
-            const themeMap = {
-                'Standard': 'Classique',
-                'BlueTheme': 'Moderne',
-                'DarkTheme': 'Minimaliste'
-            };
-            previews.container.className = `page-container ${themeMap[inputs.theme.value]} scale-preview`;
-
-            // Check A4
-            checkA4Size();
+        let html = '';
+        if (type === 'interest') {
+            html = `
+            <div class="d-flex gap-2">
+                <input type="text" class="form-control" name="interests[]" placeholder="Ex: Football, Lecture..." oninput="updatePreview()">
+                <button type="button" class="btn btn-danger-neon btn-sm" onclick="removeBlock(this)">✖</button>
+            </div>
+        `;
+        } else {
+            const prefix = type === 'experience' ? 'experience' : 'education';
+            html = `
+            <button type="button" class="btn btn-danger-neon btn-sm position-absolute top-0 end-0 m-2" onclick="removeBlock(this)">✖</button>
+            <div class="mb-2">
+                <input type="text" class="form-control mb-1" name="${prefix}_title[]" placeholder="Intitulé / Poste" oninput="updatePreview()">
+                <input type="text" class="form-control" name="${prefix}_date[]" placeholder="Dates (ex: 2020-2022)" oninput="updatePreview()">
+            </div>
+            <div>
+                <textarea class="form-control" name="${prefix}_desc[]" rows="2" maxlength="200" placeholder="Description..." oninput="updateCharCount(this); updatePreview()"></textarea>
+                <div class="char-count">0/200</div>
+            </div>
+        `;
         }
 
-        function checkA4Size() {
-            const preview = previews.container;
-            const alertBox = document.getElementById('a4-alert');
+        div.innerHTML = html;
+        container.appendChild(div);
+        updatePreview();
+    }
 
-            // Hauteur A4 en pixels (approx 1122px à 96dpi) ou comparaison relative
-            // Ici on compare scrollHeight (contenu total) vs clientHeight (hauteur fixée CSS)
-            if (preview.scrollHeight > preview.clientHeight + 5) {
-                alertBox.style.display = 'block';
-                preview.style.borderColor = 'red';
-                preview.style.boxShadow = '0 0 20px red';
-            } else {
-                alertBox.style.display = 'none';
-                preview.style.borderColor = '#333';
-                preview.style.boxShadow = 'none';
-            }
+    function addExperience() { createInputBlock('experience', 'experience-container'); }
+    function addEducation() { createInputBlock('education', 'education-container'); }
+    function addInterest() { createInputBlock('interest', 'interests-container'); }
+
+    function removeBlock(btn) {
+        btn.closest('.card, .d-flex').remove(); // Supprime le parent
+        updatePreview();
+    }
+
+    function updateCharCount(textarea) {
+        const count = textarea.value.length;
+        const counter = textarea.nextElementSibling;
+        counter.textContent = `${count}/200`;
+        if (count >= 200) counter.classList.add('limit-reached');
+        else counter.classList.remove('limit-reached');
+    }
+
+    // --- Prévisualisation Live ---
+
+    function updatePreview() {
+        // Champs simples
+        document.getElementById('prev-fullname').textContent = document.getElementById('fullname').value || 'Votre Nom';
+        document.getElementById('prev-title').textContent = document.getElementById('title').value || 'Votre Titre';
+        document.getElementById('prev-email').textContent = document.getElementById('email').value || 'email@...';
+        document.getElementById('prev-phone').textContent = document.getElementById('phone').value || '06...';
+        document.getElementById('prev-address').textContent = document.getElementById('address').value || 'Ville';
+
+        // Thème
+        const theme = document.getElementById('theme').value;
+        const themeMap = { 'Standard': 'Classique', 'BlueTheme': 'Moderne', 'DarkTheme': 'Minimaliste' };
+        document.getElementById('preview-container').className = `page-container ${themeMap[theme]} scale-preview`;
+
+        // Expériences
+        let expHtml = '';
+        const expTitles = document.getElementsByName('experience_title[]');
+        const expDates = document.getElementsByName('experience_date[]');
+        const expDescs = document.getElementsByName('experience_desc[]');
+
+        for (let i = 0; i < expTitles.length; i++) {
+            expHtml += `
+            <div class="mb-3">
+                <h5 class="mb-0 fw-bold">${expTitles[i].value}</h5>
+                <small class="text-muted fst-italic">${expDates[i].value}</small>
+                <p class="mt-1">${expDescs[i].value.replace(/\n/g, '<br>')}</p>
+            </div>
+        `;
         }
+        document.getElementById('prev-experience').innerHTML = expHtml;
 
-        // Écouteurs d'événements sur tous les champs
-        Object.values(inputs).forEach(input => {
-            input.addEventListener('input', updatePreview);
+        // Formations
+        let eduHtml = '';
+        const eduTitles = document.getElementsByName('education_title[]');
+        const eduDates = document.getElementsByName('education_date[]');
+        const eduDescs = document.getElementsByName('education_desc[]');
+
+        for (let i = 0; i < eduTitles.length; i++) {
+            eduHtml += `
+            <div class="mb-3">
+                <h5 class="mb-0 fw-bold">${eduTitles[i].value}</h5>
+                <small class="text-muted fst-italic">${eduDates[i].value}</small>
+                <p class="mt-1">${eduDescs[i].value.replace(/\n/g, '<br>')}</p>
+            </div>
+        `;
+        }
+        document.getElementById('prev-education').innerHTML = eduHtml;
+
+        // Intérêts
+        let intHtml = '';
+        const interests = document.getElementsByName('interests[]');
+        for (let i = 0; i < interests.length; i++) {
+            if (interests[i].value) intHtml += `<li>${interests[i].value}</li>`;
+        }
+        document.getElementById('prev-interests').innerHTML = intHtml;
+
+        // Check A4
+        const preview = document.getElementById('preview-container');
+        const alertBox = document.getElementById('a4-alert');
+        if (preview.scrollHeight > preview.clientHeight + 5) {
+            alertBox.style.display = 'block';
+            preview.style.borderColor = 'red';
+        } else {
+            alertBox.style.display = 'none';
+            preview.style.borderColor = '#333';
+        }
+    }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', () => {
+        // Si les conteneurs sont vides (pas de CV chargé), on ajoute un bloc par défaut
+        if (document.getElementById('experience-container').children.length === 0) addExperience();
+        if (document.getElementById('education-container').children.length === 0) addEducation();
+
+        // Listeners sur les champs statiques
+        ['fullname', 'title', 'email', 'phone', 'address', 'theme'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updatePreview);
         });
 
-        // Initialisation
+        // Image Preview
+        document.getElementById('profile_image').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            const previewImg = document.getElementById('prev-profile-img');
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                // Si on désélectionne, on garde l'ancienne ou on cache ? 
+                // Ici on ne fait rien pour l'instant ou on pourrait remettre l'image par défaut
+            }
+        });
+
+        // Update initial
         updatePreview();
     });
 </script>

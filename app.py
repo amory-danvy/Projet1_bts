@@ -84,56 +84,133 @@ def dashboard():
     user_cvs = CV.query.filter_by(user_id=current_user.id).all()
     return render_template('dashboard.html', cvs=user_cvs)
 
+import json # Import nécessaire
+
+# ... (reste du code)
+
 @app.route('/create', methods=['GET', 'POST'])
+@app.route('/edit/<int:cv_id>', methods=['GET', 'POST'])
 @login_required
-def create_cv():
+def create_cv(cv_id=None):
+    cv = None
+    if cv_id:
+        cv = CV.query.get_or_404(cv_id)
+        if cv.author != current_user:
+            flash('Accès non autorisé.', 'danger')
+            return redirect(url_for('dashboard'))
+            
     if request.method == 'POST':
         title = request.form.get('title')
         fullname = request.form.get('fullname')
         email = request.form.get('email')
         phone = request.form.get('phone')
         address = request.form.get('address')
-        experience = request.form.get('experience')
-        education = request.form.get('education')
         theme = request.form.get('theme')
         
+        # Récupération des listes pour Expérience
+        exp_titles = request.form.getlist('experience_title[]')
+        exp_dates = request.form.getlist('experience_date[]')
+        exp_descs = request.form.getlist('experience_desc[]')
+        
+        # Construction de la liste de dictionnaires pour Expérience
+        experience_list = []
+        for i in range(len(exp_titles)):
+            experience_list.append({
+                'title': exp_titles[i],
+                'date': exp_dates[i],
+                'description': exp_descs[i]
+            })
+            
+        # Récupération des listes pour Formation
+        edu_titles = request.form.getlist('education_title[]')
+        edu_dates = request.form.getlist('education_date[]')
+        edu_descs = request.form.getlist('education_desc[]')
+        
+        # Construction de la liste de dictionnaires pour Formation
+        education_list = []
+        for i in range(len(edu_titles)):
+            education_list.append({
+                'title': edu_titles[i],
+                'date': edu_dates[i],
+                'description': edu_descs[i]
+            })
+
+        # Récupération des Centres d'intérêt
+        interests_list = request.form.getlist('interests[]')
+        
         # Gestion de l'image
-        image_filename = 'default.jpg'
+        image_filename = cv.profile_image if cv else 'default.jpg'
         if 'profile_image' in request.files:
             file = request.files['profile_image']
             if file and file.filename != '':
                 filename = secure_filename(file.filename)
-                # On ajoute un préfixe unique pour éviter les doublons (optionnel mais recommandé)
-                # Ici on fait simple
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 image_filename = filename
         
-        new_cv = CV(
-            title=title,
-            fullname=fullname,
-            email=email,
-            phone=phone,
-            address=address,
-            experience=experience,
-            education=education,
-            theme=theme,
-            profile_image=image_filename,
-            author=current_user
-        )
-        
-        db.session.add(new_cv)
+        if cv:
+            # Mise à jour
+            cv.title = title
+            cv.fullname = fullname
+            cv.email = email
+            cv.phone = phone
+            cv.address = address
+            cv.experience = json.dumps(experience_list)
+            cv.education = json.dumps(education_list)
+            cv.interests = json.dumps(interests_list)
+            cv.theme = theme
+            cv.profile_image = image_filename
+            flash('CV mis à jour avec succès !', 'success')
+        else:
+            # Création
+            new_cv = CV(
+                title=title,
+                fullname=fullname,
+                email=email,
+                phone=phone,
+                address=address,
+                experience=json.dumps(experience_list),
+                education=json.dumps(education_list),
+                interests=json.dumps(interests_list),
+                theme=theme,
+                profile_image=image_filename,
+                author=current_user
+            )
+            db.session.add(new_cv)
+            flash('CV créé avec succès !', 'success')
+            
         db.session.commit()
-        
-        flash('CV créé avec succès !', 'success')
         return redirect(url_for('dashboard'))
+    
+    # Préparation des données pour le template en cas d'édition
+    if cv:
+        try:
+            cv.experience_data = json.loads(cv.experience) if cv.experience else []
+            cv.education_data = json.loads(cv.education) if cv.education else []
+            cv.interests_data = json.loads(cv.interests) if cv.interests else []
+        except:
+            cv.experience_data = []
+            cv.education_data = []
+            cv.interests_data = []
         
-    return render_template('create_cv.html')
+    return render_template('create_cv.html', cv=cv)
 
 @app.route('/view/<int:id>')
 def view_cv(id):
-    """Affichage du CV final (Public ou Privé, ici accessible si on a le lien pour simplifier)."""
     cv = CV.query.get_or_404(id)
+    
+    # On décode le JSON pour l'envoyer au template sous forme d'objet Python utilisable
+    try:
+        cv.experience_data = json.loads(cv.experience) if cv.experience else []
+        cv.education_data = json.loads(cv.education) if cv.education else []
+        cv.interests_data = json.loads(cv.interests) if cv.interests else []
+    except:
+        cv.experience_data = []
+        cv.education_data = []
+        cv.interests_data = []
+        
     return render_template('view_cv.html', cv=cv)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

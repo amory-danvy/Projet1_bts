@@ -42,3 +42,9 @@ Pour offrir des CVs visuellement impactants sans complexifier le code Python, j'
 ## Gestion de la limite A4
 
 Pour éviter que le CV ne soit coupé à l'impression, j'ai mis en place une vérification en JavaScript côté client. Le script compare la hauteur totale du contenu (`scrollHeight`) avec la hauteur fixe de la feuille A4 (`clientHeight`). Si le contenu dépasse, une alerte visuelle prévient immédiatement l'utilisateur qu'il doit raccourcir son texte.
+
+## Stockage des Données (JSON)
+
+Pour gérer les listes d'expériences et de formations de manière flexible, j'ai choisi de stocker ces données au format **JSON** dans la base de données SQLite.
+*   **Pourquoi ?** Cela permet de garder une structure simple (une seule colonne `experience`) tout en stockant des données complexes (titre, date, description pour chaque poste).
+*   **Comment ?** Python convertit les listes en texte JSON (`json.dumps`) avant l'enregistrement, et les retransforme en objets Python (`json.loads`) lors de l'affichage.
